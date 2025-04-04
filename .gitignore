@@ -1,0 +1,8 @@
+.idea
+__pycache__
+
+# GEdit temporary files
+*~
+*.snap
+.gitconfig
+.openai_key

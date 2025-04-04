@@ -28,7 +28,7 @@
 ### 1. Встановити Flask Backend
 
 ```bash
-git clone https://github.com/yourname/gpt-api-analyzer.git
+git clone https://github.com/Zavada-Nazarii/burp-AI-NZA.git
 cd burp-AI-NZA
 pip install -r requirements.txt
 python app.py

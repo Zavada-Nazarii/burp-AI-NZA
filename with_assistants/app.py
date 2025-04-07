@@ -17,6 +17,18 @@ analyzed_requests = {}
 @app.route("/")
 def index():
     return render_template("index.html", data=analyzed_requests)
+    
+@app.route("/clear_session", methods=["POST"])
+def clear_session():
+    req_data = request.get_json()
+    session_id = req_data.get("sessionId")
+
+    print(f"🧪 Запит на очищення сесії: {session_id}")
+    if session_id in analyzed_requests:
+        del analyzed_requests[session_id]
+        return jsonify({"status": "ok", "message": f"Session {session_id} cleared"}), 200
+    else:
+        return jsonify({"status": "error", "message": "Session not found"}), 404
 
 @app.route("/analyze", methods=["POST"])
 def analyze():

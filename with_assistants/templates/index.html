@@ -141,10 +141,11 @@
 
             <div id="attacks-{{ session_id }}"></div>
 
-            <div class="button-group">
-                <button onclick="generateAttacks('{{ session_id }}')">⚔️ Згенерувати пейлоуди</button>
-                <button onclick='saveAsFile("{{ session_id }}")'>💾 Зберегти повністю</button>
-            </div>
+		<div class="button-group">
+		    <button onclick="generateAttacks('{{ session_id }}')">⚔️ Згенерувати пейлоуди</button>
+		    <button onclick='saveAsFile("{{ session_id }}")'>💾 Зберегти повністю</button>
+		    <button onclick='clearOutput("{{ session_id }}")'>🧹 Очистити</button>
+		</div>
 
             {% if "потенційніВразливості" in item.output and item.output["потенційніВразливості"] %}
             <script>
@@ -176,6 +177,29 @@
                 });
         }, 3000);
     </script>
+<script>
+    function clearOutput(sessionId) {
+        fetch("/clear_session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionId: sessionId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "ok") {
+                console.log(`🧹 Сервер підтвердив очищення сесії: ${sessionId}`);
+                // Оновити сторінку після очищення, щоб показати лише актуальні дані
+                location.reload();
+            } else {
+                alert("❌ Не вдалося очистити сесію: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error("❌ Помилка при запиті на очищення:", err);
+        });
+    }
+</script>
+
     <footer style="margin-top: 50px; text-align: center; font-size: 0.9em; color: #777;">
         🔧 Інструмент розроблено <strong>🧑‍💻 <a href="https://www.linkedin.com/in/zavada-nazarii" target="_blank" style="color: #555; text-decoration: none;">Nazarii Zavada</a></strong>, 2025
     </footer>

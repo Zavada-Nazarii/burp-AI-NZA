@@ -92,6 +92,12 @@ burp-AI-NZA/
 
 ---
 
+## 👨‍💻 Інтеграція із assistants
+
+[ChatGPT Assistant Integration](https://github.com/Zavada-Nazarii/burp-AI-NZA/tree/master/with_assistants)
+
+---
+
 ## ✅ TODO / Ідеї
 
 - Додати підтримку OpenAI GPT-4.

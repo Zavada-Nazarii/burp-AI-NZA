@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8">
+    <title>GPT Security Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        function escapeHTML(str) {
+            if (typeof str !== "string") return '';
+            return str.replace(/[&<>"']/g, function (m) {
+                return ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                })[m];
+            });
+        }
+
+        async function generateAttacks(sessionId) {
+            try {
+                const res = await fetch("/generate_attacks", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sessionId: sessionId })
+                });
+
+                if (!res.ok) {
+                    console.error("❌ Сервер повернув помилку:", res.status);
+                    alert("Помилка при генерації атак.");
+                    return;
+                }
+
+                const data = await res.json();
+                console.log("✅ Отримані атаки:", data);
+
+                const container = document.querySelector(`#attacks-${sessionId}`);
+                if (!container) {
+                    console.error("❌ Контейнер не знайдено для sessionId:", sessionId);
+                    return;
+                }
+
+                container.innerHTML = '';
+
+                if (data.attacks && data.attacks.length > 0) {
+                    const details = document.createElement("details");
+                    details.open = true;
+
+                    const summary = document.createElement("summary");
+                    summary.innerText = "🎯 Згенеровані атаки";
+                    details.appendChild(summary);
+
+                    const ul = document.createElement("ul");
+                    data.attacks.forEach(attack => {
+                        const типАтаки = escapeHTML(attack["типАтаки"] || '');
+                        const параметр = escapeHTML(attack["поле"] || attack["параметр"] || '');
+                        const payload = escapeHTML(attack["payload"] || '');
+                        const пояснення = escapeHTML(attack["пояснення"] || '');
+
+                        const li = document.createElement("li");
+                        li.innerHTML = `
+                            <strong>Тип атаки:</strong> ${типАтаки}<br>
+                            <strong>Параметр:</strong> <code>${параметр}</code><br>
+                            <strong>Payload:</strong> <code>${payload}</code><br>
+                            <strong>Пояснення:</strong> ${пояснення}
+                        `;
+                        ul.appendChild(li);
+                    });
+
+                    details.appendChild(ul);
+                    container.appendChild(details);
+                } else {
+                    container.innerHTML = "<i>Немає згенерованих атак.</i>";
+                }
+            } catch (err) {
+                console.error("❌ Помилка запиту:", err);
+            }
+        }
+
+        function renderVulnerabilities(sessionId, vulns) {
+            const container = document.querySelector(`#vulns-${sessionId}`);
+            if (!container || !vulns || !vulns.length) return;
+
+            const details = document.createElement("details");
+            details.open = true;
+
+            const summary = document.createElement("summary");
+            summary.innerText = "🛡️ Потенційні вразливості";
+            details.appendChild(summary);
+
+            const ul = document.createElement("ul");
+            vulns.forEach(vuln => {
+                const типАтаки = escapeHTML(vuln["типАтаки"] || '');
+                const параметр = escapeHTML(vuln["параметр"] || vuln["поле"] || '');
+                const payload = escapeHTML(vuln["payload"] || '');
+                const пояснення = escapeHTML(vuln["пояснення"] || '');
+
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <strong>Тип атаки:</strong> ${типАтаки}<br>
+                    <strong>Параметр:</strong> <code>${параметр}</code><br>
+                    <strong>Payload:</strong> <code>${payload}</code><br>
+                    <strong>Пояснення:</strong> ${пояснення}
+                `;
+                ul.appendChild(li);
+            });
+
+            details.appendChild(ul);
+            container.appendChild(details);
+        }
+
+        function saveAsFile(sessionId) {
+            const html = document.documentElement.outerHTML;
+            const blob = new Blob([html], { type: "text/html;charset=utf-8;" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = sessionId + "_full_report.html";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</head>
+<body>
+    <h1>Результати аналізу HTTP-запитів із ChatGPT</h1>
+
+    {% if data %}
+        {% for session_id, item in data.items() %}
+        <div class="card">
+            <h3>Сесія: {{ session_id }}</h3>
+
+            <strong>Запит:</strong>
+            <pre class="monospace">{{ item.input | e }}</pre>
+
+            <strong>Призначення:</strong> {{ item.output["призначенняEndpoint"] }}<br>
+            <strong>Механізм автентифікації:</strong> {{ item.output["механізмАвтентифікації"] }}<br>
+
+            <div id="vulns-{{ session_id }}"></div>
+            <div class="comment-block">{{ item.output["коментар"] }}</div>
+
+            <div id="attacks-{{ session_id }}"></div>
+
+            <div class="button-group">
+                <button onclick="generateAttacks('{{ session_id }}')">⚔️ Згенерувати пейлоуди</button>
+                <button onclick='saveAsFile("{{ session_id }}")'>💾 Зберегти повністю</button>
+            </div>
+
+            {% if "потенційніВразливості" in item.output and item.output["потенційніВразливості"] %}
+            <script>
+                renderVulnerabilities("{{ session_id }}", {{ item.output["потенційніВразливості"] | tojson | safe }});
+            </script>
+            {% else %}
+            <script>
+                console.warn("⚠️ Вразливості не знайдено або вони порожні.");
+            </script>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>⏳ Очікуємо перший запит для аналізу...</p>
+    {% endif %}
+
+    <script>
+        let prevSessionCount = {{ data|length }};
+        setInterval(() => {
+            fetch("/")
+                .then(res => res.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, "text/html");
+                    const newCards = doc.querySelectorAll(".card");
+                    if (newCards.length > prevSessionCount) {
+                        location.reload();
+                    }
+                });
+        }, 3000);
+    </script>
+    <footer style="margin-top: 50px; text-align: center; font-size: 0.9em; color: #777;">
+        🔧 Інструмент розроблено <strong>🧑‍💻 <a href="https://www.linkedin.com/in/zavada-nazarii" target="_blank" style="color: #555; text-decoration: none;">Nazarii Zavada</a></strong>, 2025
+    </footer>
+</body>
+</html>

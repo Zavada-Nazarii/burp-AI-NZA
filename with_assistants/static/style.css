@@ -1,0 +1,50 @@
+body {
+    font-family: Arial, sans-serif;
+    padding: 8px;
+    background: #fefefe;
+}
+
+.button-group {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+
+.card {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.card h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.monospace {
+    font-family: monospace;
+    background: #f5f5f5;
+    padding: 10px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-width: 100%;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.comment-block {
+    margin-top: 10px;
+    background: #eef;
+    padding: 10px;
+    border-radius: 6px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    font-size: 15px;
+}
+

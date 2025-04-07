@@ -54,7 +54,7 @@
     python app.py
     ```
 - Відкрий у браузері: http://localhost:5000
-- Надішли HTTP-запит через UI
+- Надішли HTTP-запит через Burp із використанням розширення [GPTAnalyzer.py](https://github.com/Zavada-Nazarii/burp-AI-NZA/blob/master/GPTAnalyzer.py)
 - Отримай аналіз і payload-и
 
 ---
